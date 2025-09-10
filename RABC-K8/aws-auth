@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: aws-auth
+  namespace: kube-system
+data:
+  mapRoles: |
+    - rolearn: arn:aws:iam::169158972098:role/eksctl-demo-RABC-nodegroup-RABC-no-NodeInstanceRole-sk911OVe0TpC
+      username: system:node:{{EC2PrivateDNSName}}
+      groups:
+        - system:bootstrappers
+        - system:nodes
+  mapUsers: |
+    - userarn: arn:aws:iam::169158972098:user/VARAPRASAD
+      username: VARAPRASAD
+      groups:
+        - roboshop-trainee
