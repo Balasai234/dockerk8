@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: node-port-service
+  labels:
+    app: demo
+spec:
+  type: NodePort # Specify the service type as NodePort it will expose the service on each Node's IP at a static port (the NodePort).
+  selector:
+    app: demo
+    project: roboshop
+    env: dev
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: demo-pod
+  labels:
+    app: demo
+    project: roboshop
+    env: dev
+spec:
+  containers:
+    - name: demo-container
+      image: nginx
+      ports:
+        - containerPort: 80
