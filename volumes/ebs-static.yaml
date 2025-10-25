@@ -1,0 +1,70 @@
+# create a static PersistentVolume using an existing EBS volume and a Pod that uses it
+#We need to ensure that the Pod is scheduled on a node in the same Availability Zone (AZ) as the EBS volume.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: ebs-static
+spec:
+  accessModes:
+  - ReadWriteOnce
+  capacity:
+    storage: 20Gi
+  csi:
+    driver: ebs.csi.aws.com
+    fsType: ext4
+    volumeHandle: vol-072a8f44214a23f64
+---
+# Create a PersistentVolumeClaim to bind to the static PersistentVolume
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ebs-static-claim
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+  volumeName: ebs-static
+  storageClassName: ""
+---
+# Create a Pod that uses the PersistentVolumeClaim
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ebs-static-pod
+  labels:
+    app: ebs-static-pod
+    project: roboshop
+spec:
+#nodeSelector to ensure the pod is scheduled on a node in the same AZ as the EBS volume
+  nodeSelector:
+    topology.kubernetes.io/zone: us-east-1a
+  containers:
+    - name: nginx-container
+      image: nginx
+      volumeMounts:
+        - mountPath: "/usr/share/nginx/html"
+          name: ebs-volume
+# Volume mount name must match the volume name defined below
+  volumes:
+    - name: ebs-volume
+      persistentVolumeClaim:
+        claimName: ebs-static-claim
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ebs-static-service
+  labels:
+    app: ebs-static-pod
+    project: roboshop
+spec:
+  type: LoadBalancer
+  selector:
+    app: ebs-static-pod
+    project: roboshop
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
