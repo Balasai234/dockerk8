@@ -1,0 +1,7 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: roboshop-ebs
+provisioner: kubernetes.io/aws-ebs # or another provisioner (e.g. pd.csi.storage.gke.io, kubernetes.io/gce-pd)
+reclaimPolicy: Retain
+volumeBindingMode: WaitForFirstConsumer

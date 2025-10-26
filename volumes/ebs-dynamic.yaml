@@ -1,0 +1,54 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: roboshop-dynamic-claim
+  labels:
+    project: roboshop
+    env: production
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+  storageClassName: "roboshop-ebs"
+---
+# Create a Pod that uses the PersistentVolumeClaim
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ebs-dynamic-pod
+  labels:
+    env: production
+    project: roboshop
+spec:
+#nodeSelector to ensure the pod is scheduled on a node in the same AZ as the EBS volume
+  nodeSelector:
+    topology.kubernetes.io/zone: us-east-1a
+  containers:
+    - name: nginx-container
+      image: nginx
+      volumeMounts:
+        - mountPath: "/usr/share/nginx/html"
+          name: ebs-dynamic-volume
+  volumes:
+    - name: ebs-dynamic-volume
+      persistentVolumeClaim:
+        claimName: roboshop-dynamic-claim
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ebs-dynamic-service
+  labels:
+    env: production
+    project: roboshop
+spec:
+  type: LoadBalancer
+  selector:
+    project: roboshop
+    env: production
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
